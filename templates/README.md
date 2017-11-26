@@ -2,7 +2,7 @@
 
 #### Description ####
 
-This template can be used to deploy openshift-nginx to OpenShift. It creates several basic obejects such as ImageStream, Service, ConfigMap, DeploymentConfig and Route.
+This template can be used to deploy openshift-nginx to OpenShift. It creates several basic objects such as ImageStream, Service, ConfigMap, DeploymentConfig and Route.
 
 #### Deploying ####
 
