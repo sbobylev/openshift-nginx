@@ -2,7 +2,7 @@
 
 #### Description ####
 
-This template can be used to deploy a openshift-nginx to OpenShift. It creates several basic obejects such as ImageStream, Service, ConfigMap, DeploymentConfig and Route.
+This template can be used to deploy openshift-nginx to OpenShift. It creates several basic obejects such as ImageStream, Service, ConfigMap, DeploymentConfig and Route.
 
 #### Deploying ####
 
@@ -40,7 +40,7 @@ Set-Cookie: eeb35b7ea486a22e60e859dcd6fc711d=8bdd63c9be663ea66fdaaebc6062b59d; p
 Cache-control: private
 ```
 
-####  OpenShift cluster ####
+####  OpenShift Local Cluster ####
 
 To be able to see all projects via the Web Console, run the following command.
 
