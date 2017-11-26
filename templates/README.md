@@ -1,0 +1,4 @@
+# Sample NGINX OpenShift Template
+
+
+

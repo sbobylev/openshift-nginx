@@ -1,0 +1,142 @@
+apiVersion: v1
+items:
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: openshift-nginx
+    spec:
+      dockerImageRepository: "docker.io/sbobylev/openshift-nginx"
+      tags:
+      - from:
+          kind: DockerImage
+          name: sbobylev/openshift-nginx
+        name: latest
+        importPolicy:
+          scheduled: true
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: openshift-nginx
+      name: openshift-nginx
+    spec:
+      ports:
+      - name: 8080-tcp
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+      selector:
+        name: openshift-nginx
+      sessionAffinity: None
+      type: ClusterIP
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    data:
+      proxy.conf: |
+            proxy_redirect          off;
+            proxy_set_header        Host            $host;
+            proxy_set_header        X-Real-IP       $remote_addr;
+            proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+            client_max_body_size    10m;
+            client_body_buffer_size 128k;
+            proxy_connect_timeout   90;
+            proxy_send_timeout      90;
+            proxy_read_timeout      90;
+            proxy_buffers           32 4k;
+    kind: ConfigMap
+    metadata:
+      name: nginxconf
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        name: openshift-nginx
+        deploymentconfig: openshift-nginx
+      name: openshift-nginx
+    spec:
+      replicas: 1
+      selector:
+        name: openshift-nginx
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            name: openshift-nginx
+        spec:
+          containers:
+          - image: openshift-nginx
+            imagePullPolicy: Always
+            livenessProbe:
+              failureThreshold: 3
+              httpGet:
+                path: /
+                port: 8080
+                scheme: HTTP
+              initialDelaySeconds: 90
+              periodSeconds: 10
+              successThreshold: 1
+              timeoutSeconds: 5
+            name: openshift-nginx
+            readinessProbe:
+              failureThreshold: 3
+              httpGet:
+                path: /
+                port: 8080
+                scheme: HTTP
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              successThreshold: 1
+              timeoutSeconds: 5
+            name: openshift-nginx
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+              - mountPath: /etc/nginx/conf.d/proxy.conf
+                name: nginxconf
+                subPath: proxy.conf
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - name: nginxconf
+              configMap:
+                defaultMode: 420
+                name: nginxconf
+      test: false
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+            - openshift-nginx
+          from:
+            kind: ImageStreamTag
+            name: openshift-nginx:latest
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      name: openshift-nginx
+    spec:
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: openshift-nginx
+        weight: 100
+      wildcardPolicy: None
+kind: List
+metadata: {}
